@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: phone-trace-app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+      NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
+      HLR_HSS_BASE_URL: ${HLR_HSS_BASE_URL:-http://hlr-hss:8080}
+      HLR_HSS_API_KEY: ${HLR_HSS_API_KEY}
+      VLR_BASE_URL: ${VLR_BASE_URL:-http://vlr:8081}
+      VLR_API_KEY: ${VLR_API_KEY}
+      CDR_BASE_URL: ${CDR_BASE_URL:-http://cdr:8082}
+      CDR_API_KEY: ${CDR_API_KEY}
+      EIR_BASE_URL: ${EIR_BASE_URL:-http://eir:8083}
+      EIR_API_KEY: ${EIR_API_KEY}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - telecom-network
+    depends_on:
+      - hlr-hss
+    volumes:
+      - ./logs:/app/logs
+
+  hlr-hss:
+    build:
+      context: ./Open-Source-HLR-HSS
+      dockerfile: Dockerfile
+    container_name: hlr-hss-api
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE: memory
+      PORT: 8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - telecom-network
+
+networks:
+  telecom-network:
+    driver: bridge
+
+volumes:
+  logs:

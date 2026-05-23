@@ -1,0 +1,16 @@
+# Python project - ignore from JS linting
+Open-Source-HLR-HSS/
+Open-Source-HLR-HSS.zip
+
+# Next.js build directories
+.next/
+out/
+build/
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
